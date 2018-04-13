@@ -1,5 +1,6 @@
 # NettyDemo
-Netty应用到Android，包含客户端、移动端（断线重连、心跳、黏包处理）
+
+Netty是基于Java NIO client-server的网络应用框架，使用Netty可以快速开发网络应用,本项目基于Netty在Android平台所建项目，供大家参考学习
 
 ![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/server.gif?raw=true)
 
