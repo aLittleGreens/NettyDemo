@@ -1,4 +1,4 @@
-package ifreecomm.nettydemo;
+package ifreecomm.nettydemo.netty;
 
 import android.os.SystemClock;
 import android.util.Log;
@@ -24,12 +24,15 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 
 
-public class NettyClient {
-    private static final String TAG = "NettyClient";
+/**
+ * TCP 客户端
+ */
+public class NettyTcpClient {
+    private static final String TAG = "NettyTcpClient";
 
     private EventLoopGroup group;
 
-    private NettyListener listener;
+    private NettyClientListener listener;
 
     private Channel channel;
 
@@ -43,18 +46,18 @@ public class NettyClient {
     private long reconnectIntervalTime = 5000;
     private static final Integer CONNECT_TIMEOUT_MILLIS = 5000;
 
-    public String host;
-    public int tcp_port;
+    private String host;
+    private int tcp_port;
+    private int mIndex;
 
-//    private ScheduledExecutorService mScheduledExecutorService;
 
-    public NettyClient(String host, int tcp_port) {
+    public NettyTcpClient(String host, int tcp_port, int index) {
         this.host = host;
         this.tcp_port = tcp_port;
+        this.mIndex = index;
     }
 
     public void connect() {
-
         if (isConnecting) {
             return;
         }
@@ -72,7 +75,7 @@ public class NettyClient {
 
 
     private void connectServer() {
-        synchronized (NettyClient.this) {
+        synchronized (NettyTcpClient.this) {
             ChannelFuture channelFuture = null;
             if (!isConnect) {
                 isConnecting = true;
@@ -88,7 +91,7 @@ public class NettyClient {
                                 ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
                                 ch.pipeline().addLast(new LineBasedFrameDecoder(1024));//黏包处理
                                 ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
-                                ch.pipeline().addLast(new NettyClientHandler(listener));
+                                ch.pipeline().addLast(new NettyClientHandler(listener, mIndex));
                             }
                         });
 
@@ -97,11 +100,11 @@ public class NettyClient {
                         @Override
                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {
-                                Log.e(TAG,"连接成功");
+                                Log.e(TAG, "连接成功");
                                 isConnect = true;
                                 channel = channelFuture.channel();
                             } else {
-                                Log.e(TAG,"连接失败");
+                                Log.e(TAG, "连接失败");
                                 isConnect = false;
                             }
                             isConnecting = false;
@@ -115,7 +118,7 @@ public class NettyClient {
                     e.printStackTrace();
                 } finally {
                     isConnect = false;
-                    listener.onServiceStatusConnectChanged(NettyListener.STATUS_CONNECT_CLOSED);
+                    listener.onClientStatusConnectChanged(NettyClientListener.STATUS_CONNECT_CLOSED, mIndex);
                     if (null != channelFuture) {
                         if (channelFuture.channel() != null && channelFuture.channel().isOpen()) {
                             channelFuture.channel().close();
@@ -147,16 +150,41 @@ public class NettyClient {
         }
     }
 
+    /**
+     * 异步发送
+     *
+     * @param data
+     * @param listener
+     * @return
+     */
     public boolean sendMsgToServer(String data, ChannelFutureListener listener) {
         boolean flag = channel != null && isConnect;
         if (flag) {
-//			ByteBuf buf = Unpooled.copiedBuffer(data);
-//            ByteBuf byteBuf = Unpooled.copiedBuffer(data + System.getProperty("line.separator"), //2
-//                    CharsetUtil.UTF_8);
-            channel.writeAndFlush(data + System.getProperty("line.separator")).addListener(listener);
+            ChannelFuture channelFuture = channel.writeAndFlush(data + System.getProperty("line.separator")).addListener(listener);
+            if (channelFuture.isSuccess()) {                //4
+                Log.d(TAG, "@Write auth successful");
+            } else {
+                Log.d(TAG, "@Write auth error");
+            }
+
         }
         return flag;
     }
+
+    /**
+     * 同步发送
+     * @param data
+     * @return
+     */
+    public boolean sendMsgToServer(String data) {
+        boolean flag = channel != null && isConnect;
+        if (flag) {
+            ChannelFuture channelFuture = channel.writeAndFlush(data + System.getProperty("line.separator")).awaitUninterruptibly();
+            return channelFuture.isSuccess();
+        }
+        return false;
+    }
+
 
     public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
         boolean flag = channel != null && isConnect;
@@ -167,14 +195,26 @@ public class NettyClient {
         return flag;
     }
 
+    /**
+     * 设置重连次数
+     * @param reconnectNum
+     */
     public void setReconnectNum(int reconnectNum) {
         this.reconnectNum = reconnectNum;
     }
 
+    /**
+     * 设置重连间隔
+     * @param reconnectIntervalTime
+     */
     public void setReconnectIntervalTime(long reconnectIntervalTime) {
         this.reconnectIntervalTime = reconnectIntervalTime;
     }
 
+    /**
+     * 获取TCP连接状态
+     * @return
+     */
     public boolean getConnectStatus() {
         return isConnect;
     }
@@ -187,7 +227,7 @@ public class NettyClient {
         this.isConnect = status;
     }
 
-    public void setListener(NettyListener listener) {
+    public void setListener(NettyClientListener listener) {
         this.listener = listener;
     }
 

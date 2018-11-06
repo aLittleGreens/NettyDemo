@@ -13,12 +13,14 @@ import android.widget.Toast;
 
 import ifreecomm.nettydemo.adapter.LogAdapter;
 import ifreecomm.nettydemo.bean.LogBean;
+import ifreecomm.nettydemo.netty.NettyClientListener;
+import ifreecomm.nettydemo.netty.NettyTcpClient;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyClientListener<String> {
 
     private static final String TAG = "MainActivity";
     private Button mClearLog;
@@ -30,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private LogAdapter mSendLogAdapter = new LogAdapter();
     private LogAdapter mReceLogAdapter = new LogAdapter();
-    private NettyClient mNettyClient;
+    private NettyTcpClient mNettyTcpClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,11 +41,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViews();
         initData();
         initlistener();
-        mNettyClient = new NettyClient(Const.HOST, Const.TCP_PORT);
+        mNettyTcpClient = new NettyTcpClient(Const.HOST, Const.TCP_PORT, 0);
     }
 
     private void initlistener() {
-
 
     }
 
@@ -80,14 +81,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.send_btn:
-                if (!mNettyClient.getConnectStatus()) {
+                if (!mNettyTcpClient.getConnectStatus()) {
                     Toast.makeText(getApplicationContext(), "未连接,请先连接", LENGTH_SHORT).show();
                 } else {
                     final String msg = mSendET.getText().toString();
                     if (TextUtils.isEmpty(msg.trim())) {
                         return;
                     }
-                    mNettyClient.sendMsgToServer(msg, new ChannelFutureListener() {
+                    mNettyTcpClient.sendMsgToServer(msg, new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {                //4
@@ -114,35 +115,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void connect() {
         Log.d(TAG, "connect");
-        if (!mNettyClient.getConnectStatus()) {
-            mNettyClient.setListener(MainActivity.this);
-            mNettyClient.connect();//连接服务器
+        if (!mNettyTcpClient.getConnectStatus()) {
+            mNettyTcpClient.setListener(MainActivity.this);
+            mNettyTcpClient.connect();//连接服务器
         } else {
-            mNettyClient.disconnect();
+            mNettyTcpClient.disconnect();
         }
     }
 
     @Override
-    public void onMessageResponse(Object msg) {
+    public void onMessageResponseClient(String msg,int index) {
         Log.e(TAG, "onMessageResponse:" + msg);
-        logRece((String) msg);
-//        byte[] bytes = byteBuf.array();
-//
-//        String hexFun3 = bytesToHexFun3(bytes, byteBuf.writerIndex());
-//        logRece(hexFun3);
+        logRece(index+":"+ msg);
     }
 
     @Override
-    public void onServiceStatusConnectChanged(final int statusCode) {
+    public void onClientStatusConnectChanged(final int statusCode, final int index) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (statusCode == NettyListener.STATUS_CONNECT_SUCCESS) {
+                if (statusCode == NettyClientListener.STATUS_CONNECT_SUCCESS) {
                     Log.e(TAG, "STATUS_CONNECT_SUCCESS:");
-                    mConnect.setText("DisConnect");
+                    mConnect.setText("DisConnect:"+index);
                 } else {
                     Log.e(TAG, "onServiceStatusConnectChanged:" + statusCode);
-                    mConnect.setText("Connect");
+                    mConnect.setText("Connect:"+index);
                 }
             }
         });
@@ -183,13 +180,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static String bytesToHexFun3(byte[] bytes, int length) {
         StringBuilder buf = new StringBuilder(length * 2);
         for (int i = 0; i < length; i++) {// 使用String的format方法进行转换
-
             buf.append(String.format("%02x", new Integer(bytes[i] & 0xFF)));
         }
         return buf.toString();
     }
 
     public void disconnect(View view) {
-        mNettyClient.disconnect();
+        mNettyTcpClient.disconnect();
     }
 }

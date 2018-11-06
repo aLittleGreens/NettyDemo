@@ -14,13 +14,15 @@ import android.widget.Toast;
 
 import ifreecomm.nettyserver.adapter.LogAdapter;
 import ifreecomm.nettyserver.bean.LogBean;
+import ifreecomm.nettyserver.netty.NettyServerListener;
+import ifreecomm.nettyserver.netty.NettyTcpServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyServerListener<String> {
 
     private static final String TAG = "MainActivity";
     private Button mClearLog;
@@ -46,8 +48,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initlistener() {
     }
-
-
 
     private void initData() {
         LinearLayoutManager manager1 = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
@@ -85,14 +85,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.send_btn:
-                if (!EchoServer.getInstance().getConnectStatus()) {
+                if (!NettyTcpServer.getInstance().getConnectStatus()) {
                     Toast.makeText(getApplicationContext(), "未连接,请先连接", LENGTH_SHORT).show();
                 } else {
                     final String msg = mSendET.getText().toString();
                     if (TextUtils.isEmpty(msg.trim())) {
                         return;
                     }
-                    EchoServer.getInstance().sendMsgToServer(msg, new ChannelFutureListener() {
+                    NettyTcpServer.getInstance().sendMsgToServer(msg, new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {                //4
@@ -118,35 +118,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void startServer() {
 
-        if(!EchoServer.getInstance().isServerStart()){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    EchoServer.getInstance().setListener(MainActivity.this);
-                    EchoServer.getInstance().start();
-                }
-            }).start();
-
-        }else{
-            EchoServer.getInstance().disconnect();
+        if (!NettyTcpServer.getInstance().isServerStart()) {
+            NettyTcpServer.getInstance().setListener(MainActivity.this);
+            NettyTcpServer.getInstance().start();
+        } else {
+            NettyTcpServer.getInstance().disconnect();
         }
     }
 
     @Override
-    public void onMessageResponse(Object msg) {
-        // TODO Auto-generated method stub
-
-        // ByteBuf in = (ByteBuf) msg;
-        System.out.println("Server received: " + msg); // 2
-        logRece((String) msg);
+    public void onMessageResponseServer(String msg,String uniqueId) {
+//        Log.e(TAG,"onMessageResponseServer:ChannelId:"+uniqueId);
+        logRece(msg);
     }
+
     @Override
-    public void onChannel(final Channel channel) {
-        EchoServer.getInstance().setChannel(channel);
+    public void onChannelConnect(final Channel channel) {
+//        Log.e(TAG,"asLongText:"+channel.id().asLongText());
+//        Log.e(TAG,"asShortText:"+channel.id().asShortText());
+//        Log.e(TAG,"localAddress:"+channel.localAddress());
+//        Log.e(TAG,"remoteAddress:"+channel.remoteAddress());
+        NettyTcpServer.getInstance().setChannel(channel);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                receiveTv.setText("接收("+channel.toString()+")");
+                receiveTv.setText("接收(" + channel.toString() + ")");
             }
         });
 
@@ -154,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStartServer() {
+        Log.e(TAG,"onStartServer");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -164,28 +161,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStopServer() {
+        Log.e(TAG,"onStopServer");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 startServer.setText("startServer");
             }
         });
-
     }
 
     @Override
-    public void onServiceStatusConnectChanged(final int statusCode) {
+    public void onChannelDisConnect(Channel channel) {
+        Log.e(TAG,"onChannelDisConnect:ChannelId"+channel.id().asShortText());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (statusCode == NettyListener.STATUS_CONNECT_SUCCESS) {
-                    Log.e(TAG, "STATUS_CONNECT_SUCCESS:");
-                } else {
-                    Log.e(TAG, "onServiceStatusConnectChanged:" + statusCode);
-                    receiveTv.setText("接收");
-                }
+                receiveTv.setText("接收");
             }
         });
+
     }
 
     private void logSend(String log) {
@@ -209,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mReceLogAdapter.notifyDataSetChanged();
             }
         });
-
     }
 
 }

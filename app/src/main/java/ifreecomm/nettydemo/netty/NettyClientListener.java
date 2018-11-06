@@ -1,8 +1,8 @@
-package ifreecomm.nettydemo;
+package ifreecomm.nettydemo.netty;
 
 
 
-public interface NettyListener {
+public interface NettyClientListener<T> {
 
     public final static byte STATUS_CONNECT_SUCCESS = 1;
 
@@ -14,10 +14,10 @@ public interface NettyListener {
     /**
      * 当接收到系统消息
      */
-    void onMessageResponse(Object msg);
+    void onMessageResponseClient(T msg,int index);
 
     /**
      * 当服务状态发生变化时触发
      */
-    public void onServiceStatusConnectChanged(int statusCode);
+    public void onClientStatusConnectChanged(int statusCode,int index);
 }
