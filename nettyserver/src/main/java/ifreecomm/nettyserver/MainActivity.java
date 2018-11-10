@@ -7,12 +7,20 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+import ifreecomm.nettyserver.adapter.CustomSpinnerAdapter;
 import ifreecomm.nettyserver.adapter.LogAdapter;
+import ifreecomm.nettyserver.bean.ClientChanel;
 import ifreecomm.nettyserver.bean.LogBean;
 import ifreecomm.nettyserver.netty.NettyServerListener;
 import ifreecomm.nettyserver.netty.NettyTcpServer;
@@ -36,6 +44,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LogAdapter mReceLogAdapter = new LogAdapter();
     private TextView receiveTv;
 
+    List<ClientChanel> clientChanelArray = new ArrayList<>(); //储存客户端通道信息
+    private Spinner mSpinner;
+    private CustomSpinnerAdapter spinnerAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +59,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initlistener() {
+
+        spinnerAdapter = new CustomSpinnerAdapter(this, clientChanelArray);
+
+        mSpinner.setAdapter(spinnerAdapter);
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                ClientChanel clientChanel = spinnerAdapter.getItem(position);
+                Toast.makeText(MainActivity.this, "onItemSelected:" + clientChanel.getClientIp(), Toast.LENGTH_LONG).show();
+                NettyTcpServer.getInstance().selectorChannel(clientChanel.getChannel());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                NettyTcpServer.getInstance().selectorChannel(null);
+                Toast.makeText(MainActivity.this, "onNothingSelected", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void initData() {
@@ -68,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mClearLog = findViewById(R.id.clear_log);
         startServer = findViewById(R.id.startServer);
         receiveTv = findViewById(R.id.receiveTv);
+        mSpinner = findViewById(R.id.spinner);
 
         startServer.setOnClickListener(this);
         mSendBtn.setOnClickListener(this);
@@ -85,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.send_btn:
-                if (!NettyTcpServer.getInstance().getConnectStatus()) {
+                if (!NettyTcpServer.getInstance().isServerStart()) {
                     Toast.makeText(getApplicationContext(), "未连接,请先连接", LENGTH_SHORT).show();
                 } else {
                     final String msg = mSendET.getText().toString();
@@ -127,30 +158,72 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onMessageResponseServer(String msg,String uniqueId) {
+    public void onMessageResponseServer(String msg, String uniqueId) {
 //        Log.e(TAG,"onMessageResponseServer:ChannelId:"+uniqueId);
         logRece(msg);
     }
 
     @Override
     public void onChannelConnect(final Channel channel) {
-//        Log.e(TAG,"asLongText:"+channel.id().asLongText());
-//        Log.e(TAG,"asShortText:"+channel.id().asShortText());
-//        Log.e(TAG,"localAddress:"+channel.localAddress());
-//        Log.e(TAG,"remoteAddress:"+channel.remoteAddress());
-        NettyTcpServer.getInstance().setChannel(channel);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                receiveTv.setText("接收(" + channel.toString() + ")");
+
+        String socketStr = channel.remoteAddress().toString();
+        final ClientChanel clientChanel = new ClientChanel(socketStr, channel, channel.id().asShortText());
+
+        synchronized (clientChanelArray) {
+            clientChanelArray.add(clientChanel);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, clientChanel.getClientIp() + " 建立连接", Toast.LENGTH_LONG).show();
+                    spinnerAdapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+    }
+
+    @Override
+    public void onChannelDisConnect(Channel channel) {
+        Log.e(TAG, "onChannelDisConnect:ChannelId" + channel.id().asShortText());
+
+        for (int i = 0; i < clientChanelArray.size(); i++) {
+            final ClientChanel clientChanel = clientChanelArray.get(i);
+            if (clientChanel.getShortId().equals(channel.id().asShortText())) {
+
+                /**
+                 * 当Spinner里第一个item被remove，不会触发onItemSelected，（因为 mSelectedPosition != mOldSelectedPosition）
+                 */
+                if (i == 0) {
+                    try {
+                        Field field = AdapterView.class.getDeclaredField("mOldSelectedPosition");
+                        field.setAccessible(true);  //设置mOldSelectedPosition可访问
+                        field.setInt(mSpinner, AdapterView.INVALID_POSITION); //设置mOldSelectedPosition的值
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                synchronized (clientChanelArray) {
+                    clientChanelArray.remove(clientChanel);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.e(TAG, "disconncect " + clientChanel.getClientIp());
+                            Toast.makeText(MainActivity.this, clientChanel.getClientIp() + " 断开连接", Toast.LENGTH_LONG).show();
+                            spinnerAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+
+                return;
             }
-        });
+        }
 
     }
 
     @Override
     public void onStartServer() {
-        Log.e(TAG,"onStartServer");
+        Log.e(TAG, "onStartServer");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -161,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStopServer() {
-        Log.e(TAG,"onStopServer");
+        Log.e(TAG, "onStopServer");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -170,17 +243,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    @Override
-    public void onChannelDisConnect(Channel channel) {
-        Log.e(TAG,"onChannelDisConnect:ChannelId"+channel.id().asShortText());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                receiveTv.setText("接收");
-            }
-        });
-
-    }
 
     private void logSend(String log) {
         LogBean logBean = new LogBean(System.currentTimeMillis(), log);

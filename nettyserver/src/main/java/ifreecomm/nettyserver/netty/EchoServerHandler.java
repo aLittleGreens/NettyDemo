@@ -49,13 +49,13 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Log.e(TAG, "channelActive");
         mListener.onChannelConnect(ctx.channel());
-        NettyTcpServer.getInstance().setConnectStatus(true);
+//        NettyTcpServer.getInstance().setConnectStatus(true);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Log.e(TAG, "channelInactive");
-        NettyTcpServer.getInstance().setConnectStatus(false);
+//        NettyTcpServer.getInstance().setConnectStatus(false);
         mListener.onChannelDisConnect(ctx.channel());
     }
 }

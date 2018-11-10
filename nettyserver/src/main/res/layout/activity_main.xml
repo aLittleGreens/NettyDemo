@@ -35,6 +35,11 @@
                 android:layout_marginTop="10dp"
                 android:text="接收" />
 
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rece_list"
                 android:layout_width="match_parent"

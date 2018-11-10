@@ -34,7 +34,7 @@ public class NettyTcpServer {
 
     private static NettyTcpServer instance = null;
     private NettyServerListener listener;
-    private boolean connectStatus;
+//    private boolean connectStatus;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private boolean isServerStart;
@@ -54,7 +54,7 @@ public class NettyTcpServer {
     }
 
     public void start() {
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
                 super.run();
@@ -66,8 +66,8 @@ public class NettyTcpServer {
                             .channel(NioServerSocketChannel.class) // 5
                             .localAddress(new InetSocketAddress(port)) // 6
                             .childOption(ChannelOption.SO_KEEPALIVE, true)
-                            .childOption(ChannelOption.SO_REUSEADDR,true)
-                            .childOption(ChannelOption.TCP_NODELAY,true)
+                            .childOption(ChannelOption.SO_REUSEADDR, true)
+                            .childOption(ChannelOption.TCP_NODELAY, true)
                             .childHandler(new ChannelInitializer<SocketChannel>() { // 7
 
                                 @Override
@@ -81,7 +81,7 @@ public class NettyTcpServer {
 
                     // Bind and start to accept incoming connections.
                     ChannelFuture f = b.bind().sync(); // 8
-                    Log.e(TAG,NettyTcpServer.class.getName() + " started and listen on " + f.channel().localAddress());
+                    Log.e(TAG, NettyTcpServer.class.getName() + " started and listen on " + f.channel().localAddress());
                     isServerStart = true;
                     listener.onStartServer();
                     // Wait until the server socket is closed.
@@ -111,22 +111,22 @@ public class NettyTcpServer {
         this.listener = listener;
     }
 
-    public void setConnectStatus(boolean connectStatus) {
-        this.connectStatus = connectStatus;
-    }
+//    public void setConnectStatus(boolean connectStatus) {
+//        this.connectStatus = connectStatus;
+//    }
+//
+//    public boolean getConnectStatus() {
+//        return connectStatus;
+//    }
 
-    public boolean getConnectStatus() {
-        return connectStatus;
-    }
-
-    public boolean isServerStart(){
+    public boolean isServerStart() {
         return isServerStart;
     }
 
 
     // 异步发送消息
     public boolean sendMsgToServer(String data, ChannelFutureListener listener) {
-        boolean flag = channel != null && connectStatus && channel.isActive();
+        boolean flag = channel != null && channel.isActive();
         if (flag) {
             channel.writeAndFlush(data + System.getProperty("line.separator")).addListener(listener);
         }
@@ -135,7 +135,7 @@ public class NettyTcpServer {
 
     // 同步发送消息
     public boolean sendMsgToServer(String data) {
-        boolean flag = channel != null && connectStatus && channel.isActive();
+        boolean flag = channel != null && channel.isActive();
         if (flag) {
 //			ByteBuf buf = Unpooled.copiedBuffer(data);
 //            ByteBuf byteBuf = Unpooled.copiedBuffer(data + System.getProperty("line.separator"), //2
@@ -147,7 +147,7 @@ public class NettyTcpServer {
     }
 
     public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
-        boolean flag = channel != null && connectStatus && channel.isActive();
+        boolean flag = channel != null && channel.isActive();
         if (flag) {
             ByteBuf buf = Unpooled.copiedBuffer(data);
             channel.writeAndFlush(buf).addListener(listener);
@@ -155,7 +155,12 @@ public class NettyTcpServer {
         return flag;
     }
 
-    public void setChannel(Channel channel) {
+    /**
+     * 切换通道
+     * 设置服务端，与哪个客户端通信
+     * @param channel
+     */
+    public void selectorChannel(Channel channel) {
         this.channel = channel;
     }
 
