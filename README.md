@@ -15,7 +15,7 @@
 
 如果是作为TCP客户端使用的话，可以直接依赖
 
-## HOW to USE?
+## HOW TO USE?
 
 1. 创建TCP客户端
 ```Java
