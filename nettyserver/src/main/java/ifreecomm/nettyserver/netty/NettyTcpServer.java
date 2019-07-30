@@ -24,7 +24,7 @@ import io.netty.util.CharsetUtil;
 
 /**
  * TCP 服务端
- * 目前服务端暂时只支持连接一个客户端
+ * 目前服务端支持连接多个客户端
  */
 public class NettyTcpServer {
 

@@ -11,12 +11,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.littlegreens.netty.client.listener.MessageStateListener;
+import com.littlegreens.netty.client.listener.NettyClientListener;
+import com.littlegreens.netty.client.NettyTcpClient;
+import com.littlegreens.netty.client.status.ConnectState;
+
 import ifreecomm.nettydemo.adapter.LogAdapter;
 import ifreecomm.nettydemo.bean.LogBean;
-import ifreecomm.nettydemo.netty.NettyClientListener;
-import ifreecomm.nettydemo.netty.NettyTcpClient;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
@@ -39,16 +40,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViews();
-        initData();
-        initlistener();
-        mNettyTcpClient = new NettyTcpClient(Const.HOST, Const.TCP_PORT, 0);
+        initView();
+
+        mNettyTcpClient = new NettyTcpClient.Builder()
+                .setHost(Const.HOST)    //设置服务端地址
+                .setTcpPort(Const.TCP_PORT) //设置服务端端口号
+                .setMaxReconnectTimes(5)    //设置最大重连次数
+                .setReconnectIntervalTime(5)    //设置重连间隔时间。单位：秒
+                .setSendheartBeat(true) //设置发送心跳
+                .setHeartBeatInterval(5)    //设置心跳间隔时间。单位：秒
+                .setHeartBeatData(new byte[]{0x03, 0x0F, (byte) 0xFE, 0x05, 0x04, 0x0a}) //设置心跳数据，可以是String类型，也可以是byte[]
+                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
+                .setIndex(0)    //设置客户端标识.(因为可能存在多个tcp连接)
+                .build();
+
+        mNettyTcpClient.setListener(MainActivity.this); //设置TCP监听
     }
 
-    private void initlistener() {
-
-    }
-
-    private void initData() {
+    private void initView() {
         LinearLayoutManager manager1 = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mSendList.setLayoutManager(manager1);
         mSendList.setAdapter(mSendLogAdapter);
@@ -88,10 +97,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (TextUtils.isEmpty(msg.trim())) {
                         return;
                     }
-                    mNettyTcpClient.sendMsgToServer(msg, new ChannelFutureListener() {
+                    mNettyTcpClient.sendMsgToServer(msg, new MessageStateListener() {
                         @Override
-                        public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                            if (channelFuture.isSuccess()) {                //4
+                        public void isSendSuccss(boolean isSuccess) {
+                            if (isSuccess) {
                                 Log.d(TAG, "Write auth successful");
                                 logSend(msg);
                             } else {
@@ -116,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void connect() {
         Log.d(TAG, "connect");
         if (!mNettyTcpClient.getConnectStatus()) {
-            mNettyTcpClient.setListener(MainActivity.this);
             mNettyTcpClient.connect();//连接服务器
         } else {
             mNettyTcpClient.disconnect();
@@ -124,9 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onMessageResponseClient(String msg,int index) {
+    public void onMessageResponseClient(String msg, int index) {
         Log.e(TAG, "onMessageResponse:" + msg);
-        logRece(index+":"+ msg);
+        logRece(index + ":" + msg);
     }
 
     @Override
@@ -134,12 +142,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (statusCode == NettyClientListener.STATUS_CONNECT_SUCCESS) {
+                if (statusCode == ConnectState.STATUS_CONNECT_SUCCESS) {
                     Log.e(TAG, "STATUS_CONNECT_SUCCESS:");
-                    mConnect.setText("DisConnect:"+index);
+                    mConnect.setText("DisConnect:" + index);
                 } else {
                     Log.e(TAG, "onServiceStatusConnectChanged:" + statusCode);
-                    mConnect.setText("Connect:"+index);
+                    mConnect.setText("Connect:" + index);
                 }
             }
         });
