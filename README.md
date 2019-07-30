@@ -9,14 +9,14 @@
  **演示时，客户端在Const.java中请修改TCP服务端ip地址就行了，服务端通过切换通道，可以与多个客户端通信。**
  
  最后，不足之处请海涵，多多提issue，大家一起解决。
- ## 先看演示效果，后面有详细的用法教程
+ ## 一、先看演示效果，后面有详细的用法教程
 
 ![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/clent.gif?raw=true)
 ![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/server.gif?raw=true)
 
 如果是作为TCP客户端使用的话，可以直接依赖
 
-## HOW TO USE?
+## 二、HOW TO USE?
 
 1. **创建TCP客户端**
 ```Java
