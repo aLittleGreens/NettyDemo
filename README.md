@@ -9,9 +9,11 @@
  **演示时，客户端在Const.java中请修改TCP服务端ip地址就行了，服务端通过切换通道，可以与多个客户端通信。**
  
  最后，不足之处请海涵，多多提issue，大家一起解决。
- ## 添加依赖
- ```
- 1. build.gradle 根目录
+ ## 如何导入
+ 
+> 1. build.gradle 根目录
+
+```
 allprojects {
     repositories {
         google()
@@ -19,14 +21,14 @@ allprojects {
         maven { url 'https://dl.bintray.com/littlegreens/maven' }
     }
 }
-2.Module的build.gradle加入依赖:
+```
+> 2.Module的build.gradle加入依赖:
+
+```
  dependencies {
   implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.0'
- }
-
-
- 
- ```
+ } 
+```
  ## 一、先看演示效果，后面有详细的用法教程
 
 ![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/clent.gif?raw=true)
