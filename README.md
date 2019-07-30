@@ -17,7 +17,7 @@
 
 ## HOW TO USE?
 
-1. 创建TCP客户端
+1. **创建TCP客户端**
 ```Java
       NettyTcpClient  mNettyTcpClient = new NettyTcpClient.Builder()
                 .setHost("192.168.66.34")    //设置服务端地址
@@ -32,7 +32,7 @@
                 .build();
 ```
 
-2. 设置监听
+2. **设置监听**
 ```Java
         mNettyTcpClient.setListener(new NettyClientListener<String>() {
             @Override
@@ -46,11 +46,11 @@
             }
         });
 ```
-3. 建立连接
+3. **建立连接**
 ```Java
 mNettyTcpClient.connect();//连接服务器
 ```
-4. 发送信息到服务端
+4. **发送信息到服务端**
 ```Java
                     mNettyTcpClient.sendMsgToServer(msg, new MessageStateListener() {
                         @Override
