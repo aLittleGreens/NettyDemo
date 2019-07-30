@@ -58,7 +58,6 @@ mNettyTcpClient.connect();//连接服务器
                         public void isSendSuccss(boolean isSuccess) {
                             if (isSuccess) {
                                 Log.d(TAG, "send successful");
-                                logSend(msg);
                             } else {
                                 Log.d(TAG, "send error");
                             }
