@@ -67,9 +67,18 @@ allprojects {
             }
         });
 ```
-3. **建立连接**
+3. **连接、断开连接**
+- 判断是否已经连接
 ```Java
-mNettyTcpClient.connect();//连接服务器
+mNettyTcpClient.getConnectStatus()
+```
+- 连接
+```Java
+mNettyTcpClient.connect();
+```
+- 断开连接
+```Java
+mNettyTcpClient.disconnect();
 ```
 4. **发送信息到服务端**
 ```Java
