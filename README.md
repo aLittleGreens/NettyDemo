@@ -18,7 +18,7 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven { url 'https://dl.bintray.com/littlegreens/maven' }
+        maven { url 'https://dl.bintray.com/littlegreenscai/maven'}
     }
 }
 ```
@@ -26,7 +26,7 @@ allprojects {
 
 ```
  dependencies {
-  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.0'
+  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.3'
  } 
 ```
  ## 一、先看演示效果，后面有详细的用法教程
