@@ -19,8 +19,6 @@ import com.littlegreens.netty.client.status.ConnectState;
 import ifreecomm.nettydemo.adapter.LogAdapter;
 import ifreecomm.nettydemo.bean.LogBean;
 
-import static android.widget.Toast.LENGTH_SHORT;
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyClientListener<String> {
 
     private static final String TAG = "MainActivity";
@@ -47,10 +45,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setTcpPort(Const.TCP_PORT) //设置服务端端口号
                 .setMaxReconnectTimes(5)    //设置最大重连次数
                 .setReconnectIntervalTime(5)    //设置重连间隔时间。单位：秒
-                .setSendheartBeat(true) //设置发送心跳
+                .setSendheartBeat(true) //设置是否发送心跳
                 .setHeartBeatInterval(5)    //设置心跳间隔时间。单位：秒
                 .setHeartBeatData(new byte[]{0x03, 0x0F, (byte) 0xFE, 0x05, 0x04, 0x0a}) //设置心跳数据，可以是String类型，也可以是byte[]
-                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
+//                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
                 .setIndex(0)    //设置客户端标识.(因为可能存在多个tcp连接)
                 .build();
 
@@ -91,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.send_btn:
                 if (!mNettyTcpClient.getConnectStatus()) {
-                    Toast.makeText(getApplicationContext(), "未连接,请先连接", LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "未连接,请先连接", Toast.LENGTH_SHORT).show();
                 } else {
                     final String msg = mSendET.getText().toString();
                     if (TextUtils.isEmpty(msg.trim())) {
