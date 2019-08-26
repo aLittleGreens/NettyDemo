@@ -29,9 +29,7 @@ allprojects {
  } 
 ```
  ## 一、先看演示效果，后面有详细的用法教程
-
-![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/clent.gif?raw=true)
-![image](https://github.com/cai784921129/NettyDemo/blob/master/screenshot/server.gif?raw=true)
+ <img src="https://github.com/cai784921129/NettyDemo/blob/master/screenshot/clent.gif" width="280px"/> <img src="https://github.com/cai784921129/NettyDemo/blob/master/screenshot/server.gif" height="280px"/>
 
 如果是作为TCP客户端使用的话，可以直接依赖
 
