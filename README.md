@@ -11,18 +11,6 @@
  最后，不足之处请海涵，多多提issue，大家一起解决。
  ## 如何导入
  
-> 1. build.gradle 根目录
-
-```
-allprojects {
-    repositories {
-        google()
-        jcenter()
-    }
-}
-```
-> 2.Module的build.gradle加入依赖:
-
 ```
  dependencies {
   implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.3'
