@@ -13,7 +13,7 @@
  
 ```
  dependencies {
-  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.3'
+  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.4'
  } 
 ```
  ## 一、先看演示效果，后面有详细的用法教程
@@ -26,15 +26,16 @@
 1. **创建TCP客户端**
 ```Java
       NettyTcpClient  mNettyTcpClient = new NettyTcpClient.Builder()
-                .setHost("192.168.66.34")    //设置服务端地址
-                .setTcpPort(8881) //设置服务端端口号
+                .setHost(Const.HOST)    //设置服务端地址
+                .setTcpPort(Const.TCP_PORT) //设置服务端端口号
                 .setMaxReconnectTimes(5)    //设置最大重连次数
                 .setReconnectIntervalTime(5)    //设置重连间隔时间。单位：秒
-                .setSendheartBeat(true) //设置发送心跳
+                .setSendheartBeat(true) //设置是否发送心跳
                 .setHeartBeatInterval(5)    //设置心跳间隔时间。单位：秒
-                .setHeartBeatData(new byte[]{0x03, 0x0F, (byte) 0xFE, 0x05, 0x04, 0x0a}) //设置心跳数据，可以是String类型，也可以是byte[]
-          //    .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
+                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
                 .setIndex(0)    //设置客户端标识.(因为可能存在多个tcp连接)
+//                .setPacketSeparator("#")//用特殊字符，作为分隔符，解决粘包问题，默认是用换行符作为分隔符
+//                .setMaxPacketLong(1024)//设置一次发送数据的最大长度，默认是1024
                 .build();
 ```
 
