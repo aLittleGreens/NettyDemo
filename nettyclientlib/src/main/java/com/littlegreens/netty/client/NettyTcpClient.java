@@ -1,6 +1,7 @@
 package com.littlegreens.netty.client;
 
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.littlegreens.netty.client.handler.NettyClientHandler;
@@ -22,6 +23,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -73,6 +75,17 @@ public class NettyTcpClient {
      * 心跳数据，可以是String类型，也可以是byte[].
      */
     private Object heartBeatData;
+
+    private String packetSeparator;
+    private int maxPacketLong = 1024;
+
+    private void setPacketSeparator(String separator) {
+        this.packetSeparator = separator;
+    }
+
+    private void setMaxPacketLong(int maxPacketLong) {
+        this.maxPacketLong = maxPacketLong;
+    }
 
     private NettyTcpClient(String host, int tcp_port, int index) {
         this.host = host;
@@ -141,9 +154,20 @@ public class NettyTcpClient {
                                 if (isSendheartBeat) {
                                     ch.pipeline().addLast("ping", new IdleStateHandler(0, heartBeatInterval, 0, TimeUnit.SECONDS));//5s未发送数据，回调userEventTriggered
                                 }
+
+                                //黏包处理,需要客户端、服务端配合
+
+                                if (!TextUtils.isEmpty(packetSeparator)) {
+                                    ByteBuf delimiter= Unpooled.buffer();
+                                    delimiter.writeBytes(packetSeparator.getBytes());
+                                    ch.pipeline().addLast(new DelimiterBasedFrameDecoder(maxPacketLong,delimiter));
+                                } else {
+                                    ch.pipeline().addLast(new LineBasedFrameDecoder(maxPacketLong));
+                                }
                                 ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
                                 ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
-                                ch.pipeline().addLast(new LineBasedFrameDecoder(1024));//黏包处理,需要客户端、服务端配合
+
+
                                 ch.pipeline().addLast(new NettyClientHandler(listener, mIndex, isSendheartBeat, heartBeatData));
                             }
                         });
@@ -214,7 +238,8 @@ public class NettyTcpClient {
     public boolean sendMsgToServer(String data, final MessageStateListener listener) {
         boolean flag = channel != null && isConnect;
         if (flag) {
-            ChannelFuture channelFuture = channel.writeAndFlush(data + System.getProperty("line.separator")).addListener(new ChannelFutureListener() {
+            String separator = TextUtils.isEmpty(packetSeparator) ? System.getProperty("line.separator") : packetSeparator;
+            ChannelFuture channelFuture = channel.writeAndFlush(data + separator).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
                     listener.isSendSuccss(channelFuture.isSuccess());
@@ -242,7 +267,8 @@ public class NettyTcpClient {
     public boolean sendMsgToServer(String data) {
         boolean flag = channel != null && isConnect;
         if (flag) {
-            ChannelFuture channelFuture = channel.writeAndFlush(data + System.getProperty("line.separator")).awaitUninterruptibly();
+            String separator = TextUtils.isEmpty(packetSeparator) ? System.getProperty("line.separator") : packetSeparator;
+            ChannelFuture channelFuture = channel.writeAndFlush(data + separator).awaitUninterruptibly();
             return channelFuture.isSuccess();
         }
         return false;
@@ -334,9 +360,23 @@ public class NettyTcpClient {
          */
         private Object heartBeatData;
 
+        private String packetSeparator;
+        private int maxPacketLong = 1024;
+
         public Builder() {
+            this.maxPacketLong = 1024;
         }
 
+
+        public Builder setPacketSeparator(String packetSeparator) {
+            this.packetSeparator = packetSeparator;
+            return this;
+        }
+
+        public Builder setMaxPacketLong(int maxPacketLong) {
+            this.maxPacketLong = maxPacketLong;
+            return this;
+        }
 
         public Builder setMaxReconnectTimes(int reConnectTimes) {
             this.MAX_CONNECT_TIMES = reConnectTimes;
@@ -387,6 +427,8 @@ public class NettyTcpClient {
             nettyTcpClient.heartBeatInterval = this.heartBeatInterval;
             nettyTcpClient.isSendheartBeat = this.isSendheartBeat;
             nettyTcpClient.heartBeatData = this.heartBeatData;
+            nettyTcpClient.packetSeparator = this.packetSeparator;
+            nettyTcpClient.maxPacketLong = this.maxPacketLong;
             return nettyTcpClient;
         }
     }

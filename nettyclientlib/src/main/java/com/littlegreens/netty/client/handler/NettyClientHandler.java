@@ -51,10 +51,10 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
                         ctx.channel().writeAndFlush("Heartbeat" + System.getProperty("line.separator"));
                     } else {
                         if (heartBeatData instanceof String) {
-                            Log.d(TAG, "userEventTriggered: String");
+//                            Log.d(TAG, "userEventTriggered: String");
                             ctx.channel().writeAndFlush(heartBeatData + System.getProperty("line.separator"));
                         } else if (heartBeatData instanceof byte[]) {
-                            Log.d(TAG, "userEventTriggered: byte");
+//                            Log.d(TAG, "userEventTriggered: byte");
                             ByteBuf buf = Unpooled.copiedBuffer((byte[]) heartBeatData);
                             ctx.channel().writeAndFlush(buf);
                         } else {
@@ -101,7 +101,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
-        Log.e(TAG, "channelRead0:");
+        Log.e(TAG, "channelRead0:"+msg);
         listener.onMessageResponseClient(msg, index);
     }
 

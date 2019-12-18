@@ -1,17 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
-
-publish {
-    userOrg = 'littlegreenscai' //bintray账户下某个组织id
-    groupId = 'com.littlegreens.netty.client' //maven仓库下库的包名，一般为模块包名
-    artifactId = 'nettyclientlib' //项目名称
-    publishVersion = '1.0.3' //版本号
-    desc = 'this is socket libary base on netty' //项目介绍，可以不写
-    website = 'https://github.com/aLittleGreens/NettyDemo' //项目主页，可以不写
-    bintrayUser = 'aLittleGreensCai'
-    bintrayKey = 'd9ac3e619c6d0f972ad8a9057feed68a1baaee86'
-    dryRun = false
-}
 
 android {
     compileSdkVersion 26

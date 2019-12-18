@@ -1,5 +1,6 @@
 package ifreecomm.nettyserver.netty;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.net.InetSocketAddress;
@@ -16,6 +17,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -34,10 +36,22 @@ public class NettyTcpServer {
 
     private static NettyTcpServer instance = null;
     private NettyServerListener listener;
-//    private boolean connectStatus;
+    //    private boolean connectStatus;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private boolean isServerStart;
+
+    private String packetSeparator;
+    private int maxPacketLong = 1024;
+
+    public void setPacketSeparator(String separator) {
+        this.packetSeparator = separator;
+    }
+
+    public void setMaxPacketLong(int maxPacketLong) {
+        this.maxPacketLong = maxPacketLong;
+    }
+
 
     public static NettyTcpServer getInstance() {
         if (instance == null) {
@@ -73,7 +87,15 @@ public class NettyTcpServer {
                                 @Override
                                 public void initChannel(SocketChannel ch) throws Exception {
                                     ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                                    ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+                                    if (!TextUtils.isEmpty(packetSeparator)) {
+//                                        ByteBuf delimiter = Unpooled.copiedBuffer(packetSeparator.getBytes());
+                                        ByteBuf delimiter= Unpooled.buffer();
+                                        delimiter.writeBytes(packetSeparator.getBytes());
+                                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(maxPacketLong, delimiter));
+                                    } else {
+                                        ch.pipeline().addLast(new LineBasedFrameDecoder(maxPacketLong));
+                                    }
+                                    ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
                                     ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                                     ch.pipeline().addLast(new EchoServerHandler(listener));
                                 }
@@ -127,8 +149,9 @@ public class NettyTcpServer {
     // 异步发送消息
     public boolean sendMsgToServer(String data, ChannelFutureListener listener) {
         boolean flag = channel != null && channel.isActive();
+        String separator = TextUtils.isEmpty(packetSeparator) ? System.getProperty("line.separator") : packetSeparator;
         if (flag) {
-            channel.writeAndFlush(data + System.getProperty("line.separator")).addListener(listener);
+            channel.writeAndFlush(data + separator).addListener(listener);
         }
         return flag;
     }
@@ -140,24 +163,26 @@ public class NettyTcpServer {
 //			ByteBuf buf = Unpooled.copiedBuffer(data);
 //            ByteBuf byteBuf = Unpooled.copiedBuffer(data + System.getProperty("line.separator"), //2
 //                    CharsetUtil.UTF_8);
-            ChannelFuture channelFuture = channel.writeAndFlush(data + System.getProperty("line.separator")).awaitUninterruptibly();
+            String separator = TextUtils.isEmpty(packetSeparator) ? System.getProperty("line.separator") : packetSeparator;
+            ChannelFuture channelFuture = channel.writeAndFlush(data + separator).awaitUninterruptibly();
             return channelFuture.isSuccess();
         }
         return false;
     }
 
-    public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
-        boolean flag = channel != null && channel.isActive();
-        if (flag) {
-            ByteBuf buf = Unpooled.copiedBuffer(data);
-            channel.writeAndFlush(buf).addListener(listener);
-        }
-        return flag;
-    }
+//    public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
+//        boolean flag = channel != null && channel.isActive();
+//        if (flag) {
+//            ByteBuf buf = Unpooled.copiedBuffer(data);
+//            channel.writeAndFlush(buf).addListener(listener);
+//        }
+//        return flag;
+//    }
 
     /**
      * 切换通道
      * 设置服务端，与哪个客户端通信
+     *
      * @param channel
      */
     public void selectorChannel(Channel channel) {

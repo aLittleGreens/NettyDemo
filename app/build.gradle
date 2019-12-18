@@ -4,7 +4,7 @@ android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "littlegreens.nettydemo"
-        minSdkVersion 18
+        minSdkVersion 21
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -24,4 +24,5 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     api project(':nettyclientlib')
+//    implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.4'
 }
