@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void startServer() {
         NettyTcpServer nettyTcpServer = NettyTcpServer.getInstance();
-        nettyTcpServer.setPacketSeparator("#");
+//        nettyTcpServer.setPacketSeparator("#");
         if (!nettyTcpServer.isServerStart()) {
             nettyTcpServer.setListener(MainActivity.this);
 

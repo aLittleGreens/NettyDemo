@@ -168,7 +168,7 @@ public class NettyTcpClient {
                                 ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
 
 
-                                ch.pipeline().addLast(new NettyClientHandler(listener, mIndex, isSendheartBeat, heartBeatData));
+                                ch.pipeline().addLast(new NettyClientHandler(listener, mIndex, isSendheartBeat, heartBeatData,packetSeparator));
                             }
                         });
 

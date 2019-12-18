@@ -1,5 +1,6 @@
 package com.littlegreens.netty.client.handler;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.littlegreens.netty.client.listener.NettyClientListener;
@@ -20,6 +21,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
     private NettyClientListener listener;
     private int index;
     private Object heartBeatData;
+    private String packetSeparator;
 
     //    private static final ByteBuf HEARTBEAT_SEQUENCE = Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Heartbeat"+System.getProperty("line.separator"),
 //            CharsetUtil.UTF_8));
@@ -27,10 +29,15 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
 
 
     public NettyClientHandler(NettyClientListener listener, int index, boolean isSendheartBeat, Object heartBeatData) {
+        this(listener,index,isSendheartBeat,heartBeatData,null);
+    }
+
+    public NettyClientHandler(NettyClientListener listener, int index, boolean isSendheartBeat, Object heartBeatData,String separator) {
         this.listener = listener;
         this.index = index;
         this.isSendheartBeat = isSendheartBeat;
         this.heartBeatData = heartBeatData;
+        this.packetSeparator = TextUtils.isEmpty(separator) ? System.getProperty("line.separator") : separator;
     }
 
     /**
@@ -48,11 +55,11 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
 //                ctx.channel().writeAndFlush("Heartbeat" + System.getProperty("line.separator"));
                 if (isSendheartBeat) {
                     if (heartBeatData == null) {
-                        ctx.channel().writeAndFlush("Heartbeat" + System.getProperty("line.separator"));
+                        ctx.channel().writeAndFlush("Heartbeat" + packetSeparator);
                     } else {
                         if (heartBeatData instanceof String) {
 //                            Log.d(TAG, "userEventTriggered: String");
-                            ctx.channel().writeAndFlush(heartBeatData + System.getProperty("line.separator"));
+                            ctx.channel().writeAndFlush(heartBeatData + packetSeparator);
                         } else if (heartBeatData instanceof byte[]) {
 //                            Log.d(TAG, "userEventTriggered: byte");
                             ByteBuf buf = Unpooled.copiedBuffer((byte[]) heartBeatData);
