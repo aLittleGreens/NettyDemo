@@ -13,7 +13,7 @@
  
 ```
  dependencies {
-  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.4'
+  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.5'
  } 
 ```
  ## 一、先看演示效果，后面有详细的用法教程
