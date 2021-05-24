@@ -11,11 +11,7 @@
  最后，不足之处请海涵，多多提issue，大家一起解决。
  ## 如何导入
  
-```
- dependencies {
-  implementation 'com.littlegreens.netty.client:nettyclientlib:1.0.5'
- } 
-```
+直接依赖 lib：nettyclientlib
  ## 一、先看演示效果，后面有详细的用法教程
  <img src="https://github.com/cai784921129/NettyDemo/blob/master/screenshot/clent.gif" width="280px"/> <img src="https://github.com/cai784921129/NettyDemo/blob/master/screenshot/server.gif" height="280px"/>
 
@@ -32,10 +28,8 @@
                 .setReconnectIntervalTime(5)    //设置重连间隔时间。单位：秒
                 .setSendheartBeat(true) //设置是否发送心跳
                 .setHeartBeatInterval(5)    //设置心跳间隔时间。单位：秒
-                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
+                .setHeartBeatData(new byte[]{0x55, 0x55, 0x55, 0x55}) //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
                 .setIndex(0)    //设置客户端标识.(因为可能存在多个tcp连接)
-//                .setPacketSeparator("#")//用特殊字符，作为分隔符，解决粘包问题，默认是用换行符作为分隔符
-//                .setMaxPacketLong(1024)//设置一次发送数据的最大长度，默认是1024
                 .build();
 ```
 

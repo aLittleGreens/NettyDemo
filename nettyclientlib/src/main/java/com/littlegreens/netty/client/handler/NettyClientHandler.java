@@ -6,15 +6,18 @@ import android.util.Log;
 import com.littlegreens.netty.client.listener.NettyClientListener;
 import com.littlegreens.netty.client.status.ConnectState;
 
+import java.io.UnsupportedEncodingException;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.ReferenceCountUtil;
 
 
-public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
+public class NettyClientHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final String TAG = "NettyClientHandler";
     private final boolean isSendheartBeat;
@@ -29,10 +32,10 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
 
 
     public NettyClientHandler(NettyClientListener listener, int index, boolean isSendheartBeat, Object heartBeatData) {
-        this(listener,index,isSendheartBeat,heartBeatData,null);
+        this(listener, index, isSendheartBeat, heartBeatData, null);
     }
 
-    public NettyClientHandler(NettyClientListener listener, int index, boolean isSendheartBeat, Object heartBeatData,String separator) {
+    public NettyClientHandler(NettyClientListener listener, int index, boolean isSendheartBeat, Object heartBeatData, String separator) {
         this.listener = listener;
         this.index = index;
         this.isSendheartBeat = isSendheartBeat;
@@ -55,18 +58,13 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
 //                ctx.channel().writeAndFlush("Heartbeat" + System.getProperty("line.separator"));
                 if (isSendheartBeat) {
                     if (heartBeatData == null) {
-                        ctx.channel().writeAndFlush("Heartbeat" + packetSeparator);
+                        ByteBuf buf = Unpooled.copiedBuffer(requestBody);
+                        ctx.channel().writeAndFlush(buf);
+                    } else if (heartBeatData instanceof byte[]) {
+                        ByteBuf buf = Unpooled.copiedBuffer((byte[]) heartBeatData);
+                        ctx.channel().writeAndFlush(buf);
                     } else {
-                        if (heartBeatData instanceof String) {
-//                            Log.d(TAG, "userEventTriggered: String");
-                            ctx.channel().writeAndFlush(heartBeatData + packetSeparator);
-                        } else if (heartBeatData instanceof byte[]) {
-//                            Log.d(TAG, "userEventTriggered: byte");
-                            ByteBuf buf = Unpooled.copiedBuffer((byte[]) heartBeatData);
-                            ctx.channel().writeAndFlush(buf);
-                        } else {
-                            Log.e(TAG, "userEventTriggered: heartBeatData type error");
-                        }
+                        Log.e(TAG, "userEventTriggered: heartBeatData type error");
                     }
                 } else {
                     Log.e(TAG, "不发送心跳");
@@ -107,9 +105,18 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
      * @param msg                   消息
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
-        Log.e(TAG, "channelRead0:"+msg);
-        listener.onMessageResponseClient(msg, index);
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) {
+        Log.e(TAG, "channelRead0:" + msg);
+        try {
+            ByteBuf buf = (ByteBuf) msg;
+            byte[] bytes = new byte[buf.readableBytes()];
+            buf.readBytes(bytes);
+            String result = new String(bytes, "utf-8");
+            Log.e(TAG, "Server: " + result);
+            listener.onMessageResponseClient(bytes, index);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

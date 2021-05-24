@@ -16,10 +16,13 @@ import com.littlegreens.netty.client.listener.NettyClientListener;
 import com.littlegreens.netty.client.NettyTcpClient;
 import com.littlegreens.netty.client.status.ConnectState;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+
 import ifreecomm.nettydemo.adapter.LogAdapter;
 import ifreecomm.nettydemo.bean.LogBean;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyClientListener<String> {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyClientListener<byte[]> {
 
     private static final String TAG = "MainActivity";
     private Button mClearLog;
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LogAdapter mSendLogAdapter = new LogAdapter();
     private LogAdapter mReceLogAdapter = new LogAdapter();
     private NettyTcpClient mNettyTcpClient;
+
+    private final byte[] sendByte =  new byte[]{0x55, 0x54, 0x72, 0x21};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setReconnectIntervalTime(5)    //设置重连间隔时间。单位：秒
                 .setSendheartBeat(true) //设置是否发送心跳
                 .setHeartBeatInterval(5)    //设置心跳间隔时间。单位：秒
-                .setHeartBeatData("I'm is HeartBeatData") //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
+                .setHeartBeatData(new byte[]{0x55, 0x55, 0x55, 0x55}) //设置心跳数据，可以是String类型，也可以是byte[]，以后设置的为准
                 .setIndex(0)    //设置客户端标识.(因为可能存在多个tcp连接)
 //                .setPacketSeparator("#")//用特殊字符，作为分隔符，解决粘包问题，默认是用换行符作为分隔符
 //                .setMaxPacketLong(1024)//设置一次发送数据的最大长度，默认是1024
@@ -78,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mConnect.setOnClickListener(this);
         mSendBtn.setOnClickListener(this);
         mClearLog.setOnClickListener(this);
+
+        mSendET.setText(Arrays.toString(sendByte));
     }
 
     @Override
@@ -92,22 +99,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (!mNettyTcpClient.getConnectStatus()) {
                     Toast.makeText(getApplicationContext(), "未连接,请先连接", Toast.LENGTH_SHORT).show();
                 } else {
-                    final String msg = mSendET.getText().toString();
-                    if (TextUtils.isEmpty(msg.trim())) {
-                        return;
-                    }
-                    mNettyTcpClient.sendMsgToServer(msg, new MessageStateListener() {
+                    mNettyTcpClient.sendMsgToServer(sendByte, new MessageStateListener() {
                         @Override
                         public void isSendSuccss(boolean isSuccess) {
                             if (isSuccess) {
                                 Log.d(TAG, "Write auth successful");
-                                logSend(msg);
+                                logSend(Arrays.toString(sendByte));
                             } else {
                                 Log.d(TAG, "Write auth error");
                             }
                         }
                     });
-                    mSendET.setText("");
+                    String result = Arrays.toString(sendByte);
+                    mSendET.setText(result);
                 }
 
                 break;
@@ -131,9 +135,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onMessageResponseClient(String msg, int index) {
-        Log.e(TAG, "onMessageResponse:" + msg);
-        logRece(index + ":" + msg);
+    public void onMessageResponseClient(byte[] msg, int index) {
+        String result = Arrays.toString(msg);
+        Log.e(TAG, "onMessageResponse:" + result);
+        logRece(result);
+//        logRece(index + ":" + msg);
     }
 
     @Override

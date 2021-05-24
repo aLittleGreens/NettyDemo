@@ -154,21 +154,7 @@ public class NettyTcpClient {
                                 if (isSendheartBeat) {
                                     ch.pipeline().addLast("ping", new IdleStateHandler(0, heartBeatInterval, 0, TimeUnit.SECONDS));//5s未发送数据，回调userEventTriggered
                                 }
-
-                                //黏包处理,需要客户端、服务端配合
-
-                                if (!TextUtils.isEmpty(packetSeparator)) {
-                                    ByteBuf delimiter= Unpooled.buffer();
-                                    delimiter.writeBytes(packetSeparator.getBytes());
-                                    ch.pipeline().addLast(new DelimiterBasedFrameDecoder(maxPacketLong,delimiter));
-                                } else {
-                                    ch.pipeline().addLast(new LineBasedFrameDecoder(maxPacketLong));
-                                }
-                                ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                                ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
-
-
-                                ch.pipeline().addLast(new NettyClientHandler(listener, mIndex, isSendheartBeat, heartBeatData,packetSeparator));
+                                ch.pipeline().addLast(new NettyClientHandler(listener, mIndex, isSendheartBeat, heartBeatData, packetSeparator));
                             }
                         });
 
@@ -231,7 +217,7 @@ public class NettyTcpClient {
     /**
      * 异步发送
      *
-     * @param data 要发送的数据
+     * @param data     要发送的数据
      * @param listener 发送结果回调
      * @return 方法执行结果
      */
@@ -289,10 +275,11 @@ public class NettyTcpClient {
         return flag;
     }
 
+
     /**
      * 获取TCP连接状态
      *
-     * @return  获取TCP连接状态
+     * @return 获取TCP连接状态
      */
     public boolean getConnectStatus() {
         return isConnect;

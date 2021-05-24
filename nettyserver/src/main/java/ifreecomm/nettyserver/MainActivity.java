@@ -14,8 +14,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ifreecomm.nettyserver.adapter.CustomSpinnerAdapter;
@@ -30,7 +32,7 @@ import io.netty.channel.ChannelFutureListener;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyServerListener<String> {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NettyServerListener<byte[]> {
 
     private static final String TAG = "MainActivity";
     private Button mClearLog;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<ClientChanel> clientChanelArray = new ArrayList<>(); //储存客户端通道信息
     private Spinner mSpinner;
     private CustomSpinnerAdapter spinnerAdapter;
+    private final byte[] sendByte =  new byte[]{0x55, 0x54, 0x72, 0x21};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startServer.setOnClickListener(this);
         mSendBtn.setOnClickListener(this);
         mClearLog.setOnClickListener(this);
+        mSendET.setText(Arrays.toString(sendByte));
     }
 
     @Override
@@ -119,22 +123,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (!NettyTcpServer.getInstance().isServerStart()) {
                     Toast.makeText(getApplicationContext(), "未连接,请先连接", LENGTH_SHORT).show();
                 } else {
-                    final String msg = mSendET.getText().toString();
-                    if (TextUtils.isEmpty(msg.trim())) {
-                        return;
-                    }
-                    NettyTcpServer.getInstance().sendMsgToServer(msg, new ChannelFutureListener() {
+                    NettyTcpServer.getInstance().sendMsgToServer(sendByte, new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
                             if (channelFuture.isSuccess()) {                //4
                                 Log.d(TAG, "Write auth successful");
-                                logSend(msg);
+                                logSend(Arrays.toString(sendByte));
                             } else {
                                 Log.d(TAG, "Write auth error");
                             }
                         }
                     });
-                    mSendET.setText("");
+
+                    mSendET.setText(Arrays.toString(sendByte));
                 }
                 break;
 
@@ -160,9 +161,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onMessageResponseServer(String msg, String uniqueId) {
-//        Log.e(TAG,"onMessageResponseServer:ChannelId:"+uniqueId);
-        logRece(msg);
+    public void onMessageResponseServer(byte[] msg, String uniqueId) {
+        Log.e(TAG,"onMessageResponseServer:ChannelId:"+uniqueId);
+
+        String result = Arrays.toString(msg);
+        Log.e(TAG, "onMessageResponse:" + result);
+        logRece(result);
     }
 
     @Override

@@ -86,18 +86,7 @@ public class NettyTcpServer {
 
                                 @Override
                                 public void initChannel(SocketChannel ch) throws Exception {
-                                    ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                                    if (!TextUtils.isEmpty(packetSeparator)) {
-//                                        ByteBuf delimiter = Unpooled.copiedBuffer(packetSeparator.getBytes());
-                                        ByteBuf delimiter= Unpooled.buffer();
-                                        delimiter.writeBytes(packetSeparator.getBytes());
-                                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(maxPacketLong, delimiter));
-                                    } else {
-                                        ch.pipeline().addLast(new LineBasedFrameDecoder(maxPacketLong));
-                                    }
-                                    ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                                    ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
-                                    ch.pipeline().addLast(new EchoServerHandler(listener));
+                                    ch.pipeline().addLast(new EchoByteServerHandler(listener));
                                 }
                             });
 
@@ -170,14 +159,14 @@ public class NettyTcpServer {
         return false;
     }
 
-//    public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
-//        boolean flag = channel != null && channel.isActive();
-//        if (flag) {
-//            ByteBuf buf = Unpooled.copiedBuffer(data);
-//            channel.writeAndFlush(buf).addListener(listener);
-//        }
-//        return flag;
-//    }
+    public boolean sendMsgToServer(byte[] data, ChannelFutureListener listener) {
+        boolean flag = channel != null && channel.isActive();
+        if (flag) {
+            ByteBuf buf = Unpooled.copiedBuffer(data);
+            channel.writeAndFlush(buf).addListener(listener);
+        }
+        return flag;
+    }
 
     /**
      * 切换通道
