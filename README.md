@@ -84,6 +84,6 @@ mNettyTcpClient.disconnect();
 1、服务端反馈的消息被截断
 答：由于socket会粘包，sdk中默认的采用的是特殊符号作为分割符，来解决粘包问题，默认采用的分隔符是分割符，也可以通过setPacketSeparator，设置自定义的换行符，这样客户端发送信息的时候，sdk会在末尾，添加分隔符，这里需要注意服务端，返回信息的时候，也要添加对应的分隔符。
 
-2、master分支代码，不支持发送byte[]格式，有需求请参考develop_2.0 分之
+2、master分支代码，不支持发送byte[]格式，byte[]格式的需求，请参考develop_2.0 分支
 
 
