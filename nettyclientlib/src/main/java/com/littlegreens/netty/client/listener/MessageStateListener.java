@@ -6,5 +6,5 @@ package com.littlegreens.netty.client.listener;
  * <p>发送状态监听</p>
  */
 public interface MessageStateListener {
-     void isSendSuccss(boolean isSuccess);
+     void isSendSuccess(boolean isSuccess);
 }

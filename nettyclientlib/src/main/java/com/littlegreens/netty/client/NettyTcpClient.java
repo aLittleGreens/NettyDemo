@@ -150,7 +150,7 @@ public class NettyTcpClient {
                         .channel(NioSocketChannel.class)
                         .handler(new ChannelInitializer<SocketChannel>() {
                             @Override
-                            public void initChannel(SocketChannel ch) throws Exception {
+                            public void initChannel(SocketChannel ch) {
                                 if (isSendheartBeat) {
                                     ch.pipeline().addLast("ping", new IdleStateHandler(0, heartBeatInterval, 0, TimeUnit.SECONDS));//5s未发送数据，回调userEventTriggered
                                 }
@@ -173,20 +173,17 @@ public class NettyTcpClient {
                         });
 
                 try {
-                    channelFuture = bootstrap.connect(host, tcp_port).addListener(new ChannelFutureListener() {
-                        @Override
-                        public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                            if (channelFuture.isSuccess()) {
-                                Log.e(TAG, "连接成功");
-                                reconnectNum = MAX_CONNECT_TIMES;
-                                isConnect = true;
-                                channel = channelFuture.channel();
-                            } else {
-                                Log.e(TAG, "连接失败");
-                                isConnect = false;
-                            }
-                            isConnecting = false;
+                    channelFuture = bootstrap.connect(host, tcp_port).addListener((ChannelFutureListener) channelFuture1 -> {
+                        if (channelFuture1.isSuccess()) {
+                            Log.e(TAG, "连接成功");
+                            reconnectNum = MAX_CONNECT_TIMES;
+                            isConnect = true;
+                            channel = channelFuture1.channel();
+                        } else {
+                            Log.e(TAG, "连接失败");
+                            isConnect = false;
                         }
+                        isConnecting = false;
                     }).sync();
 
                     // Wait until the connection is closed.
@@ -242,7 +239,7 @@ public class NettyTcpClient {
             ChannelFuture channelFuture = channel.writeAndFlush(data + separator).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    listener.isSendSuccss(channelFuture.isSuccess());
+                    listener.isSendSuccess(channelFuture.isSuccess());
                 }
             });
         }
@@ -282,7 +279,7 @@ public class NettyTcpClient {
             channel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    listener.isSendSuccss(channelFuture.isSuccess());
+                    listener.isSendSuccess(channelFuture.isSuccess());
                 }
             });
         }
@@ -361,7 +358,7 @@ public class NettyTcpClient {
         private Object heartBeatData;
 
         private String packetSeparator;
-        private int maxPacketLong = 1024;
+        private int maxPacketLong;
 
         public Builder() {
             this.maxPacketLong = 1024;

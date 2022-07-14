@@ -21,7 +21,7 @@
                 android:layout_height="wrap_content"
                 android:text="发送" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/send_list"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
@@ -34,7 +34,7 @@
                 android:layout_marginTop="10dp"
                 android:text="接收" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rece_list"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
@@ -80,13 +80,12 @@
                 android:orientation="horizontal">
 
                 <EditText
+                    android:autofillHints="@string/autofill_password_field"
                     android:id="@+id/send_et"
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
                     android:layout_weight="1"
                     android:gravity="top"
-                    android:hint="输入要发送的文字"
-                    android:maxLines="100"
                     android:padding="5dp" />
 
                 <Button
