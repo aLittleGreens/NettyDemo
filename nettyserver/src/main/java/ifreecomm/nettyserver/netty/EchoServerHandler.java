@@ -11,15 +11,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
 
     private static final String TAG = "EchoServerHandler";
-    private NettyServerListener mListener;
+    private final NettyServerListener<String> mListener;
 
-    public EchoServerHandler(NettyServerListener listener) {
+    public EchoServerHandler(NettyServerListener<String> listener) {
         this.mListener = listener;
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-//    	System.out.println("channelReadComplete");
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+    	System.out.println("channelReadComplete");
     }
 
     @Override
@@ -31,7 +31,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, String msg) {
         if(msg.equals("Heartbeat")){
             Log.d(TAG,"Heartbeat");
             return; //客户端发送来的心跳数据
@@ -41,19 +41,17 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<String> {
 
     /**
      * 连接成功
-     *
-     * @param ctx
-     * @throws Exception
+     * @param ctx ChannelHandlerContext
      */
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx)  {
         Log.e(TAG, "channelActive");
         mListener.onChannelConnect(ctx.channel());
 //        NettyTcpServer.getInstance().setConnectStatus(true);
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx)  {
         Log.e(TAG, "channelInactive");
 //        NettyTcpServer.getInstance().setConnectStatus(false);
         mListener.onChannelDisConnect(ctx.channel());
