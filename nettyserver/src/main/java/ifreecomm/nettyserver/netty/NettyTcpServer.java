@@ -31,10 +31,9 @@ import io.netty.util.CharsetUtil;
 public class NettyTcpServer {
 
     private static final String TAG = "NettyTcpServer";
-    private final int port = 1088;
+    private final int port = 8888;
     private Channel channel;
 
-    private static NettyTcpServer instance = null;
     private NettyServerListener listener;
     //    private boolean connectStatus;
     private EventLoopGroup bossGroup;
@@ -53,15 +52,12 @@ public class NettyTcpServer {
     }
 
 
+    private static final class InstanceHolder {
+        static final NettyTcpServer instance = new NettyTcpServer();
+    }
+
     public static NettyTcpServer getInstance() {
-        if (instance == null) {
-            synchronized (NettyTcpServer.class) {
-                if (instance == null) {
-                    instance = new NettyTcpServer();
-                }
-            }
-        }
-        return instance;
+        return InstanceHolder.instance;
     }
 
     private NettyTcpServer() {

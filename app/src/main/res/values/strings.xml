@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">NettyDemo</string>
+    <string name="autofill_password_field">输入要发送的文字</string>
 </resources>
